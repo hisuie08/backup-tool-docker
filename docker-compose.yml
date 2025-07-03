@@ -1,0 +1,14 @@
+services:
+  rsync-backup:
+    build: .
+    container_name: rsync-backup
+    env_file: .env
+    volumes:
+      - ${SOURCE_DIR}:${SOURCE_DIR}:ro
+      - ${BACKUP_DIR}:${BACKUP_DIR}
+      - ./logs:/logs
+      - ./locks:/locks
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ}
+
