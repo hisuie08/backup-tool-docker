@@ -37,7 +37,8 @@ mkdir -p "$BACKUP_DIR" "$(dirname "$LOG_FILE")" "$TEMP_DIR"
 run_backup() {
   TIMESTAMP=$(date +%Y%m%d-%H%M%S)
   DEST="$BACKUP_DIR/backup-$TIMESTAMP"
-  LATEST=$(ls -1dt "$BACKUP_DIR"/backup-* 2>/dev/null | head -n 1 || true)
+
+  LATEST=$(find "$BACKUP_DIR" -maxdepth 1 -type d -name 'backup-*' | sort -r | head -n 1 || true)
 
   log "[+] Starting backup to $DEST"
   mkdir -p "$DEST"
@@ -52,7 +53,7 @@ run_backup() {
 
   # 保持数チェックと削除
   if [ "$RETAINED" -gt 0 ]; then
-    BACKUPS=( $(ls -1dt "$BACKUP_DIR"/backup-* 2>/dev/null) )
+    BACKUPS=( $(find "$BACKUP_DIR" -maxdepth 1 -type d -name 'backup-*' | sort -r) )
     COUNT=${#BACKUPS[@]}
     if [ "$COUNT" -gt "$RETAINED" ]; then
       for b in "${BACKUPS[@]:$RETAINED}"; do
