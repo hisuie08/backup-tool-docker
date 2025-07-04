@@ -18,17 +18,6 @@ log() {
   echo "[$(date +%Y-%m-%dT%H:%M:%S)] $1"
 }
 
-# 排他制御
-LOCK_FD=200
-exec {LOCK_FD}>"$LOCK_FILE" || {
-  log "[!] Cannot open lock file: $LOCK_FILE"
-  exit 1
-}
-
-flock -n "$LOCK_FD" || {
-  log "[!] Another backup is already running. Exiting."
-  exit 0
-}
 
 # 必要なディレクトリ作成
 mkdir -p "$BACKUP_DIR" "$(dirname "$LOG_FILE")" "$TEMP_DIR"
@@ -64,4 +53,13 @@ run_backup() {
   fi
 }
 
-run_backup
+# 排他ロック制御
+mkdir -p "$(dirname "$LOCK_FILE")"
+exec 9>"$LOCK_FILE"
+if flock -n 9; then
+  echo "PID $$ started at $(date '+%Y-%m-%d %H:%M:%S')" > "$LOCK_FILE"
+  run_backup
+  rm -f "$LOCK_FILE"
+else
+  log "[!] Lock file exists. Another backup is already running."
+fi
